@@ -82,9 +82,12 @@ private:
      * @return void
      *
     */
-    bool checkValidPlayerMove(const int rowCoordinate, const int columnCoordinate) const {
-        return (rowCoordinate    >= 0 && rowCoordinate    <= ROWSIZE)
-            && (columnCoordinate >= 0 && columnCoordinate <= COLUMNSIZE)
+    bool checkValidMove(const int rowCoordinate, const int columnCoordinate) const {
+        return
+               (rowCoordinate    >= 0 && rowCoordinate    < ROWSIZE)
+            && (columnCoordinate >= 0 && columnCoordinate < COLUMNSIZE)
+
+            //TODO: Fix the issue where I can overwrite a move that's been placed by the computer.
             && this->gameBoard[rowCoordinate][columnCoordinate] == ' ';
     }
 
@@ -96,10 +99,12 @@ private:
         int rowCoordinate = rand() % 3;
         int columnCoordinate = rand() % 3;
 
-        while (!checkValidPlayerMove(rowCoordinate, columnCoordinate)) {
+        while (!checkValidMove(rowCoordinate, columnCoordinate)) {
             rowCoordinate = rand() % 3;
             columnCoordinate = rand() % 3;
         }
+        std::cout << "Computer move baord: " <<  this->gameBoard[rowCoordinate][columnCoordinate] << std::endl;
+
         this->gameBoard[rowCoordinate][columnCoordinate] = this->COMPUTERCHARACTER;
         drawBoard();
 
@@ -175,14 +180,14 @@ public:
             playerMoveRow -= 1;
             playerMoveColumn -= 1;
 
-            if (!checkValidPlayerMove(playerMoveRow, playerMoveColumn)) {
-                std::cout << "Invliad Number" << std::endl;
+            if (!checkValidMove(playerMoveRow, playerMoveColumn)) {
+                std::cout << "Invalid Number" << std::endl;
                 continue;
             }
             game.playerMove(playerMoveRow, playerMoveColumn);
+
             checkDraw();
             checkWin();
-
         }
     }
 };
