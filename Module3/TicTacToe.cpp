@@ -6,6 +6,8 @@ class TicTacToe {
 private:
     const int ROWSIZE = 3;
     const int COLUMNSIZE = 3;
+    const std::string GAMEDRAW = "The game ends in a draw";
+
 
     // A board that can hold a 3x3 for 'O's and 'X's
     char gameBoard[3][3] = {
@@ -56,7 +58,7 @@ private:
      *  @return boolean if false, the board still has moves that can be made, and if true the board is full.
      */
     bool checkDraw() {
-        std::cout << this->gameBoard[0][1] << std::endl;
+
         for (int i = 0; i < ROWSIZE; i++) {
             for (int j = 0; j < COLUMNSIZE; j++) {
                 // Checking if there are still moves that can be made
@@ -65,7 +67,8 @@ private:
                 }
             }
         }
-        return true;
+        std::cout << GAMEDRAW << std::endl;
+        std::exit(0);
     }
 
 
@@ -80,15 +83,9 @@ private:
      *
     */
     bool checkValidPlayerMove(const int rowCoordinate, const int columnCoordinate) const {
-        if ((rowCoordinate < 0 || rowCoordinate > ROWSIZE) || (columnCoordinate < 0 || columnCoordinate > COLUMNSIZE)) {
-            std::cout << "Move needs to be placed between 1 and 3 inclusively including 1 and 3" << std::endl;
-            return false;
-        }
-        if (this->gameBoard[rowCoordinate][columnCoordinate] != ' ') {
-            std::cout << "This cell already contains a: " << this->gameBoard[rowCoordinate][columnCoordinate];
-            return false;
-        }
-        return true;
+        return (rowCoordinate    >= 0 && rowCoordinate    <= ROWSIZE)
+            && (columnCoordinate >= 0 && columnCoordinate <= COLUMNSIZE)
+            && this->gameBoard[rowCoordinate][columnCoordinate] == ' ';
     }
 
     /**
@@ -104,6 +101,10 @@ private:
             columnCoordinate = rand() % 3;
         }
         this->gameBoard[rowCoordinate][columnCoordinate] = this->COMPUTERCHARACTER;
+        drawBoard();
+
+        // No more cells to occupy, the board is full
+        checkDraw();
     }
 
 public:
@@ -124,15 +125,9 @@ public:
     void playerMove(int &rowCoordinate, int &columnCoordinate) {
         this->gameBoard[rowCoordinate][columnCoordinate] = this->PLAYERCHARACTER;
 
-        int endGame = 0;
-
-        // No more cells to occupy, the board is full
-        if (checkDraw() ) {
-            std::cout << "The game ends in a draw: " << std::endl;
-            endGame = 1;
-            std::exit(0);
-        }
-
+        drawBoard();
+        checkDraw();
+        computerMove();
     }
 
 
@@ -142,10 +137,10 @@ public:
     void gameLoop() {
         TicTacToe game;
 
-        std::cout << "Please enter two numbers between 1 and 3 to play your mark in the row and column respectively." <<
-                std::endl;
+        std::cout << "Please enter two numbers between 1 and 3 to play your mark in the row and column respectively."
+                  << std::endl;
         std::cout << "The first number corresponds to the row, and the second number to the column to pinpoint the cell"
-                << std::endl;
+                  << std::endl;
 
         int playerMoveRow;
         int playerMoveColumn;
@@ -164,8 +159,7 @@ public:
             The Board is displayed immediately after the computer's move
             The game needs to check if the game is a win or a draw
         */
-        int moveCount = 0;
-        while (moveCount < 9) {
+        while (true) {
             game.checkDraw();
             game.checkWin();
 
@@ -182,23 +176,13 @@ public:
             playerMoveColumn -= 1;
 
             if (!checkValidPlayerMove(playerMoveRow, playerMoveColumn)) {
+                std::cout << "Invliad Number" << std::endl;
                 continue;
             }
-
             game.playerMove(playerMoveRow, playerMoveColumn);
-            moveCount++;
+            checkDraw();
+            checkWin();
 
-            game.drawBoard();
-            game.checkDraw();
-
-            game.checkWin();
-
-            game.computerMove();
-
-            game.checkWin();
-
-
-            game.drawBoard();
         }
     }
 };
@@ -207,5 +191,6 @@ public:
 int main() {
     TicTacToe game;
     game.gameLoop();
+
     return 0;
 }
