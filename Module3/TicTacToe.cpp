@@ -4,20 +4,26 @@
 
 class TicTacToe {
 private:
-    const int ROWSIZE = 3;
-    const int COLUMNSIZE = 3;
+
     const std::string GAMEDRAW = "The game ends in a draw";
-
-
-    // A board that can hold a 3x3 for 'O's and 'X's
-    char gameBoard[3][3] = {
-        {' ', ' ', ' '},
-        {' ', ' ', ' '},
-        {' ', ' ', ' '},
-    };
-
     const char PLAYERCHARACTER = 'X';
     const char COMPUTERCHARACTER = 'O';
+    const char PLACEHOLDER = ' ';
+
+    std::vector<std::vector<char>> gameBoard = {
+        {PLACEHOLDER, PLACEHOLDER, PLACEHOLDER},
+        {PLACEHOLDER, PLACEHOLDER, PLACEHOLDER},
+        {PLACEHOLDER, PLACEHOLDER, PLACEHOLDER},
+    };
+
+    // Calculating the size of the gameboard one time at initialization of the game
+    const int ROWSIZE = gameBoard.size();
+    const int COLUMNSIZE = gameBoard[0].size();
+
+    // // A board that can hold a 3x3 for 'O's and 'X's
+    // char gameBoard[3][3] = {
+    //
+    // };
 
     /**
      * @brief This function is used to draw the gameboard with the marks that have been placed
@@ -49,6 +55,19 @@ private:
      *        and diagonally).
      */
     void checkWin() const {
+
+        // Horizontal wins [0][0], [0][1], [0][2] or [1][0], [1][1], [1][2] or [2][0], [2][1], [2][2]
+        // Vertical wins   [0][0], [1][0], [2][0] or [0][1], [1][1], [2][1] or [0][2], [1][2], [2][2]
+        // Diagonal wins   [0][0], [1][1], [2][2] or [0][2], [1][1], [2][0]
+
+        // Checking for horizontal wins:
+        for (int i = 0; i < ROWSIZE; i++) {
+            for (int j = 0; j < COLUMNSIZE; j++) {
+
+            }
+
+        }
+
     }
 
 
@@ -57,12 +76,11 @@ private:
      *         can not accept any more moves.
      *  @return boolean if false, the board still has moves that can be made, and if true the board is full.
      */
-    bool checkDraw() {
-
+    bool checkDraw() const {
         for (int i = 0; i < ROWSIZE; i++) {
             for (int j = 0; j < COLUMNSIZE; j++) {
                 // Checking if there are still moves that can be made
-                if (this->gameBoard[i][j] == ' ') {
+                if (gameBoard[i][j] == PLACEHOLDER) {
                     return false;
                 }
             }
@@ -77,19 +95,49 @@ private:
      *        and if a marker already exists in
      *        the cell the user is trying to access (rather a human or computer user).
      *
+     *        A valid move by either the computer or the player is as follows:
+     *          Between the bounds of the tic-tac-board 0-2 (player knows it as 1-3)
+     *          Is there already an X or O in the position on the board.
+     *
      * @param rowCoordinate    userInputted
      * @param columnCoordinate userInputted
-     * @return void
+     * @return boolean (true/false)
      *
     */
-    bool checkValidMove(const int rowCoordinate, const int columnCoordinate) const {
-        return
-               (rowCoordinate    >= 0 && rowCoordinate    < ROWSIZE)
-            && (columnCoordinate >= 0 && columnCoordinate < COLUMNSIZE)
+    bool checkInvalidMove(const int rowCoordinate, const int columnCoordinate) const {
+        bool result = false;
 
-            //TODO: Fix the issue where I can overwrite a move that's been placed by the computer.
-            && this->gameBoard[rowCoordinate][columnCoordinate] == ' ';
+        // Making sure the user inputs are within the bounds of the gameboard
+        if (rowCoordinate < 0 || rowCoordinate >= ROWSIZE) {
+            std::cout
+                << "Please enter your first number between 1 and 3 to make place your move "
+                << std::endl;
+            result = true;
+        }
+        if (columnCoordinate < 0 || columnCoordinate >= COLUMNSIZE) {
+            std::cout
+                << "Please enter your second number between 1 and 3 to make place your move "
+                << std::endl;
+            result = true;
+        }
+
+        // Don't continue to the array if user input is out of bounds
+        if (result) return result;
+
+        // Making sure that the input isn't placing a move on a spot that has already been played
+        if (gameBoard[rowCoordinate][columnCoordinate] == PLAYERCHARACTER) {
+            std::cout << " You already placed an " << PLAYERCHARACTER << " at " << rowCoordinate
+                    << ", " << columnCoordinate << std::endl;
+            result = true;
+        }
+        if (gameBoard[rowCoordinate][columnCoordinate] == COMPUTERCHARACTER) {
+            std::cout << " The computer already placed an " << COMPUTERCHARACTER << " at " << rowCoordinate
+                    << ", " << columnCoordinate << std::endl;
+            result = true;
+        }
+        return result;
     }
+
 
     /**
      * @brief This function allows the computer to randomly select a cell between 0 and 2 for the rows and columns
@@ -99,25 +147,24 @@ private:
         int rowCoordinate = rand() % 3;
         int columnCoordinate = rand() % 3;
 
-        while (!checkValidMove(rowCoordinate, columnCoordinate)) {
+        while (checkInvalidMove(rowCoordinate, columnCoordinate)) {
             rowCoordinate = rand() % 3;
             columnCoordinate = rand() % 3;
         }
-        std::cout << "Computer move baord: " <<  this->gameBoard[rowCoordinate][columnCoordinate] << std::endl;
-
-        this->gameBoard[rowCoordinate][columnCoordinate] = this->COMPUTERCHARACTER;
+        gameBoard[rowCoordinate][columnCoordinate] = COMPUTERCHARACTER;
         drawBoard();
 
-        // No more cells to occupy, the board is full
+        checkWin();
         checkDraw();
     }
 
 public:
-    // Initialize the game and display the name of the game Tic-Tac-Toe
+    // Initialize and start the Tic-Tac-Toe game and display the name of the game Tic-Tac-Toe
     TicTacToe() {
         std::cout << " == Welcome to Tic-Tac-Toe == " << std::endl;
         std::cout << " >> Please enter q to quit << " << std::endl;
         std::cout << "------------------------------" << std::endl;
+        gameLoop();
     }
 
 
@@ -127,12 +174,12 @@ public:
      * @param rowCoordinate int (between 1 and 3)
      * @param columnCoordinate int (between 1 and 3)
      */
-    void playerMove(int &rowCoordinate, int &columnCoordinate) {
-        this->gameBoard[rowCoordinate][columnCoordinate] = this->PLAYERCHARACTER;
-
+    void playerMove(const int rowCoordinate, const int columnCoordinate) {
+        gameBoard[rowCoordinate][columnCoordinate] = PLAYERCHARACTER;
         drawBoard();
+
         checkDraw();
-        computerMove();
+        checkWin();
     }
 
 
@@ -140,33 +187,24 @@ public:
      * This function provides the gameLoop where the game starts and continues to run the Tic-Tac-Toe game.
      */
     void gameLoop() {
-        TicTacToe game;
-
         std::cout << "Please enter two numbers between 1 and 3 to play your mark in the row and column respectively."
-                  << std::endl;
+                << std::endl;
         std::cout << "The first number corresponds to the row, and the second number to the column to pinpoint the cell"
-                  << std::endl;
+                << std::endl;
 
-        int playerMoveRow;
-        int playerMoveColumn;
         std::string userQuit;
 
-        if (userQuit == "q") {
-            std::cout << "The Tic-Tac-Toe game has ended " << std::endl;
-            return;
-        }
-
-        /*
-            The human Player makes their move
-            The Board is displayed immediately after the human player's move
-            The game needs to check if the game is a win or a draw
-            The Game automatically plays the computer's move
-            The Board is displayed immediately after the computer's move
-            The game needs to check if the game is a win or a draw
-        */
         while (true) {
-            game.checkDraw();
-            game.checkWin();
+            int playerMoveRow;
+            int playerMoveColumn;
+
+            if (userQuit == "q") {
+                std::cout << "The Tic-Tac-Toe game has ended " << std::endl;
+                break;
+            }
+
+            // Checking the computers move here
+            checkWin();
 
             std::cout << "Please enter your two numbers " << std::endl;
             std::cin >> playerMoveRow >> playerMoveColumn;
@@ -180,14 +218,12 @@ public:
             playerMoveRow -= 1;
             playerMoveColumn -= 1;
 
-            if (!checkValidMove(playerMoveRow, playerMoveColumn)) {
-                std::cout << "Invalid Number" << std::endl;
+            if (checkInvalidMove(playerMoveRow, playerMoveColumn)) {
                 continue;
             }
-            game.playerMove(playerMoveRow, playerMoveColumn);
 
-            checkDraw();
-            checkWin();
+            playerMove(playerMoveRow, playerMoveColumn);
+            computerMove();
         }
     }
 };
@@ -195,7 +231,6 @@ public:
 
 int main() {
     TicTacToe game;
-    game.gameLoop();
-
+    std::cout << "Thank you for playing " << std::endl;
     return 0;
 }
