@@ -83,13 +83,13 @@ private:
     /**
      * @brief Compares the ranks and suits of the cards in the hand. If the rank or suit does not exist,
      *        then the cards are invalid. Let the user know if invalid or not.
-     *        Also, checks the hand size, and if there are not 5 cards in the hand, it's not the right amount of cards.
-     *        So the program will exit.
+     *        Also, checks the hand size, and if there are not 5 cards in the hand, it's not the right number of cards.
+     *        So the program will exit. Also, checks for duplicate cards in the hand.
      *
      * @param cards
      * @typedef vector<string> &cards
      * @typedef
-     * @return boolean if card was found or not from the input
+     * @return boolean if valid cards after in the hand
      */
     bool checkValidInput(const std::vector<std::string> &cards) const {
         if (cards.size() != 5) {
@@ -102,15 +102,18 @@ private:
 
         // Searching the hand of cards against my generated card deck
         for (const auto &card: cards) {
+
             // Searching the deck for a valid card pairing
             for (const auto &deckOfCard: deckOfCards) {
-                // Card found, set flag, and find the next card
+
+                // Card found, set the flag or sentinel value, and find the next card
                 if (card == deckOfCard) {
                     // Found a valid card, stop searching for this card and proceed to the next one
                     validCard = true;
                     break;
                 }
             }
+
             // Found a bad card in the player's hand
             if (validCard != true) {
                 std::cout << card << std::endl;
@@ -118,6 +121,17 @@ private:
                 std::exit(0);
             }
         }
+
+        // Checking for duplicate cards after checking for cards that may not exist.
+        std::map<std::string, int> duplicates;
+        for (const auto &card: cards) {
+            if (++duplicates[card] > 1) {
+                std::cout << card << std::endl;
+                std::cout << "Duplicate card found in hand" << std::endl;
+                std::exit(-1);
+            }
+        }
+
         return true;
     }
 
@@ -205,7 +219,6 @@ private:
         for (auto iterator: count) {
             countPairs.emplace_back(iterator.first, iterator.second);
         }
-
         // Checking for four of a kind and full house
         if (countPairs.size() == 2) {
             for (const auto &countPair: countPairs) {
@@ -219,31 +232,6 @@ private:
                 }
             }
         }
-
-        /* Checking for three of a kind (3 x 1 x 1) && two pairs (2 x 2 x 1) */
-        else if (countPairs.size() == 3) {
-            for (const auto &countPair: countPairs) {
-                if (countPair.second == 3) {
-                    std::cout << "Three of a Kind" << std::endl;
-                    return 50 + countPair.first;
-                }
-                if (countPair.second == 2) {
-                    std::cout << "Two Pair" << std::endl;
-                    return 40 + countPair.first;
-                }
-            }
-        }
-
-        /* Checking for one pair ( 2 x 1 x 1 x 1 ) */
-        else if (countPairs.size() == 4) {
-            for (const auto &countPair: countPairs) {
-                if (countPair.second == 2) {
-                    std::cout << "Pair" << std::endl;
-                    return 30 + countPair.first;
-                }
-            }
-        }
-
         /* Checking for a straight flush, straight, flush, and royal flush*/
         else if (countPairs.size() == 5) {
             if (checkRoyalCards(hand) && straight) {
@@ -261,6 +249,28 @@ private:
             if (straight) {
                 std::cout << "Straight" << std::endl;
                 return 60 + countPairs[4].first;
+            }
+        }
+        /* Checking for three of a kind (3 x 1 x 1) && two pairs (2 x 2 x 1) */
+        else if (countPairs.size() == 3) {
+            for (const auto &countPair: countPairs) {
+                if (countPair.second == 3) {
+                    std::cout << "Three of a Kind" << std::endl;
+                    return 50 + countPair.first;
+                }
+                if (countPair.second == 2) {
+                    std::cout << "Two Pair" << std::endl;
+                    return 40 + countPair.first;
+                }
+            }
+        }
+        /* Checking for one pair ( 2 x 1 x 1 x 1 ) */
+        else if (countPairs.size() == 4) {
+            for (const auto &countPair: countPairs) {
+                if (countPair.second == 2) {
+                    std::cout << "Pair" << std::endl;
+                    return 30 + countPair.first;
+                }
             }
         }
         std::cout << "High Card" << std::endl;
@@ -431,6 +441,12 @@ void simulate() {
     PokerHandEvaluator("AC QS 9D 6H 3C", "KC TS 8D 5H 2C");
     PokerHandEvaluator("KC TS 8D 5H 2C", "AC QS 9D 6H 3C");
     PokerHandEvaluator("AH QD 9C 6S 3H", "AD QS 9H 6C 3D");
+
+    // Royal Flush vs. High Card
+    PokerHandEvaluator("AH KH QH JH TH", "KS 4C 3S 8H TS");
+
+    // Flush (Mixed in a pair for testing) vs. Straight
+    PokerHandEvaluator("7H 2H 7H 4H KH", "2C 3S 4D 5H 6S");
 }
 
 
