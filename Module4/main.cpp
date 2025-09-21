@@ -159,7 +159,6 @@ private:
         return true;
     }
 
-
     // Checking if the cards are a royal straight (used for royal flush check).
     bool checkRoyalCards(const std::vector<int> &hand) const {
         if (hand[0] == 10 && hand[1] == 11 && hand[2] == 12 && hand[3] == 13 && hand[4] == 14) {
@@ -251,15 +250,13 @@ private:
                 std::cout << "Royal Flush" << std::endl;
                 return 110 + countPairs[4].first;
             }
-
             if (flush && straight) {
                 std::cout << "Straight Flush" << std::endl;
                 return 100 + countPairs[4].first;
             }
-
             if (flush) {
                 std::cout << "Flush" << std::endl;
-                return 70 + countPairs[4].first;
+                return 70;
             }
             if (straight) {
                 std::cout << "Straight" << std::endl;
@@ -268,6 +265,29 @@ private:
         }
         std::cout << "High Card" << std::endl;
         return countPairs[4].first;
+    }
+
+    /**
+     * @brief This function breaks the tie on a flush when a flush tie occurs.
+     * @param hand
+     * @param handOne
+     * @param handTwo
+     *
+     * @return Sum of Two 5 card hands for flushes
+     */
+    std::string flushBreaker(std::vector<int> &handOne, std::vector<int> &handTwo) {
+        std::sort(handOne.begin(), handOne.end(), std::greater<int>());
+        std::sort(handTwo.begin(), handTwo.end(), std::greater<int>());
+        // Process both hands at the same time
+        for (int i = 0; i < 5; i++) {
+            if (handOne[i] > handTwo[i]) {
+                return "Hand One Wins";
+            }
+            if (handOne[i] < handTwo[i]) {
+                return "Hand Two Wins";
+            }
+        }
+        return "Tie";
     }
 
     /**
@@ -299,15 +319,12 @@ private:
         } else if (handOnePoints < handTwoPoints) {
             std::cout << "Hand Two Wins" << std::endl;
         } else if (handOnePoints == handTwoPoints) {
-            std::cout << "Tie" << std::endl;
+            if (handOneFlush && handTwoFlush && (!handOneStraight || !handTwoStraight)) {
+                std::cout << flushBreaker(handOneRanks, handTwoRanks) << std::endl;
+            } else {
+                std::cout << "Tie" << std::endl;
+            }
         }
-
-
-        // std::cout << "Hand one high card is: " << handOnePoints.second << std::endl;
-        // std::cout << "Hand One has: " << handOnePoints.first << " points" << std::endl;
-        //
-        // std::cout << "Hand two high card is: " << handTwoPoints.second << std::endl;
-        // std::cout << "Hand Two has: " << handTwoPoints.first << " points" << std::endl;
     }
 
 
@@ -341,7 +358,8 @@ private:
         return cardsInHand;
     }
 
-public:
+public
+:
     /**
      * @brief Initializing both players hands for evaluation
      * @param playerOneHand
