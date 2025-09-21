@@ -5,8 +5,6 @@
 #include <map>
 #include <sstream>
 #include <vector>
-
-
 /**
  *
  * This class will be able to compare any two hands of poker and tell which is the winner by the
@@ -45,7 +43,6 @@
  *      high card:          20 points
  *
  */
-
 class PokerHandEvaluator {
 private:
     // Variables that hold the cards from the two hands
