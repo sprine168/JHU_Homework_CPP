@@ -2,6 +2,7 @@
 #include <array>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <vector>
 
@@ -13,7 +14,18 @@
  * different possible card hands found here: https://en.wikipedia.org/wiki/List_of_poker_hands
  *
  * Suits of cards   C, D, H, S              (Clubs, Diamonds, Hearts, Spades)
- * Card numbers     2 - 9 && T, J, Q, K, A  (in that rank)
+ * Card numbers     2 - 9
+ *                  T,
+ *                  J,
+ *                  Q,
+ *                  K,
+ *                  A  (in that order for ranking)
+ *
+ *      Converted the face card numbers to  T = 10,
+ *                                          J = 11,
+ *                                          Q = 12,
+ *                                          K = 13,
+ *                                          A = 14
  *
  *      Design Decisions:
  *      Have a constant string that holds the suit of the cards to compare against the test inputs. When initializing the hands
@@ -43,14 +55,12 @@ private:
     int handTwoScore = 0;
 
     // Inline config arrays for setting up a deckOfCards for comparison up front
-    std::array<char, 4> suits = {'C', 'S', 'D', 'H'};
-    std::array<char, 13> ranks = {
-        '2', '3', '4', '5',
-        '6', '7', '8', '9',
-        'T', 'J', 'Q', 'K',
-        'A'
+    std::array<std::string, 4> suits = {"C", "S", "D", "H"};
+    std::array<std::string, 13> ranks = {
+        "2", "3", "4", "5",
+        "6", "7", "8", "9",
+        "T", "J", "Q", "K", "A"
     };
-
 
 
     /**
@@ -73,7 +83,7 @@ private:
         // Sentinel value to check if there are cards that aren't right in the hand
         bool validCard = false;
 
-        // Searching the hand
+        // Searching the hand of cards against my generated card deck
         for (const auto &card: cards) {
             // Searching the deck for a valid card pairing
             for (const auto &deckOfCard: deckOfCards) {
@@ -87,7 +97,8 @@ private:
             // Found a bad card in the player's hand
             if (validCard != true) {
                 std::cout << card << std::endl;
-                return false;
+                std::cout << "A bad card exists in this hand: " << std::endl;
+                std::exit(0);
             }
         }
         return true;
@@ -95,13 +106,90 @@ private:
 
 
     bool checkFlush(const std::vector<std::string> &hand) const {
-        std::cout << hand[0][1] << hand[1][1] << hand[2][1] << hand[3][1] << hand[4][1] << std::endl;
         if (hand[0][1] == hand[1][1] &&
             hand[1][1] == hand[2][1] &&
             hand[2][1] == hand[3][1] &&
             hand[3][1] == hand[4][1]) { return true; }
-
         return false;
+    }
+
+    /**
+     * @brief This function returns points based on what kind of pair the player has
+     *
+     * Royal Flush:        110 points
+     * Straight Flush:     100 points
+     * four of a kind:     90 points
+     * full house:         80 points
+     * flush:              70 points
+     * straight:           60 points
+     * three of a kind:    50 points
+     * two pair:           40 points
+     * one pair:           30 points
+     * high card:          20 points
+     *
+     * @param hand
+     * @return Points with which cards were found
+     */
+    int assignPoints(const std::vector<int> &hand) const {
+        int points = 0;
+        std::map<int, int> count;
+
+        for (int i = 0; i < hand.size(); i++) {
+            count[hand[i]]++;
+        }
+
+        /* Checking for 4 of a kind ( 4 x 1 ) && full house ( 2 x 3 || 3 x 2) */
+        if (count.size() == 2) {
+            std::cout << "Found four of a kind" << std::endl;
+            if (count[0] == 4) points = 90;
+            else if ( (count[0] == 3 || count[0] == 2) && (count[1] == 3 || count[1] == 2) ) points = 80;
+        }
+
+        /* Checking for two pair ( 2 x 2 x 1 ) && three pair ( 3 x 1 x 1 ) */
+        else if (count.size() == 3) {
+            std::cout << "Found two pair" << std::endl;
+            points = 40;
+        }
+
+        // Checking for a pair ( 2 x 1 x 1 x 1 )
+        else if (count.size() == 4) {
+            std::cout << "Found a pair" << std::endl;
+            points = 30;
+        }
+
+        // Checking for a high card only or straight
+        else if (count.size() == 5) {
+            std::cout << "Only a high card" << std::endl;
+        }
+
+        for (const auto &map: count) {
+            std::cout << map.first << " " << map.second << std::endl;
+        }
+
+
+        return points;
+    }
+
+    int straightCheck(const std::vector<std::string> &hand) const {
+    }
+
+    /**
+     * @brief This function takes in a poker hand and returns the ranks of the cards, stripping away the suits.
+     * @param hand
+     * @return A vector of strings containing just the card ranks
+     */
+    static std::vector<int> pullCardRank(const std::vector<std::string> &hand) {
+        std::vector<int> result;
+        for (const auto &cardValue: hand) {
+            std::string cardRank = cardValue.substr(0, 1);
+            if (cardRank == "A") result.push_back(14);
+            else if (cardRank == "K") result.push_back(13);
+            else if (cardRank == "Q") result.push_back(12);
+            else if (cardRank == "J") result.push_back(11);
+            else if (cardRank == "T") result.push_back(10);
+            else result.push_back(stoi(cardRank));
+        }
+        return result;
     }
 
 
@@ -112,48 +200,19 @@ private:
      *
      */
     void compareHands() {
-        // Sorting the hands by ranking
-        std::sort(handOne.begin(), handOne.end());
-        std::sort(handTwo.begin(), handTwo.end());
-
-
         bool handOneFlush = checkFlush(handOne);
         bool handTwoFlush = checkFlush(handTwo);
 
-        std::cout << handOneFlush << std::endl;
-        std::cout << handTwoFlush << std::endl;
+        // Pull just the ranks out of the hand and separate the suits
+        std::vector<int> handOneRanks = pullCardRank(handOne);
+        std::vector<int> handTwoRanks = pullCardRank(handTwo);
 
+        // Sorting the hands by ranking
+        std::sort(handOneRanks.begin(), handOneRanks.end());
+        std::sort(handTwoRanks.begin(), handTwoRanks.end());
 
-
-
-        // Royal Flush      Rank 1
-
-
-        // Straight Flush   Rank 2
-
-
-        // Four of a Kind   Rank 3
-
-
-        // Full House       Rank 4
-
-
-        // Flush            Rank 5
-
-
-        // Straight         Rank 6
-
-
-        // Three of a Kind  Rank 7
-
-
-        // Two Pair         Rank 8
-
-
-        // One Pair         Rank 9
-
-
-        // High Card        Rank 10
+        assignPoints(handOneRanks);
+        assignPoints(handTwoRanks);
     }
 
 
@@ -175,18 +234,13 @@ private:
         std::istringstream handStream(hand);
         constexpr char delimiter = ' ';
         std::string line;
-
         std::vector<std::string> cardsInHand;
 
         while (std::getline(handStream, line, delimiter)) {
             cardsInHand.push_back(line);
         }
+        checkValidInput(cardsInHand);
 
-        if (!checkValidInput(cardsInHand)) {
-            std::cout << "A bad card exists in this hand: " << std::endl;
-            std::exit(0);
-            // return cardsInHand = {"-1"};
-        }
         return cardsInHand;
     }
 
@@ -198,9 +252,9 @@ private:
      */
     std::vector<std::string> buildDeck() {
         // Creating a deck of cards to validate the input against
-        for (const char suit: suits) {
-            for (const char rank: ranks) {
-                deckOfCards.push_back(std::string(1, rank) + std::string(1, suit));
+        for (const std::string &suit: suits) {
+            for (const std::string &rank: ranks) {
+                deckOfCards.push_back(rank + suit);
             }
         }
         return deckOfCards;
@@ -215,31 +269,18 @@ public:
     PokerHandEvaluator(const std::string &playerOneHand, const std::string &playerTwoHand) {
         // Building a deck of cards to check against.
         buildDeck();
-
         this->handOne = initializeHands(playerOneHand);
         this->handTwo = initializeHands(playerTwoHand);
-
         compareHands();
-    }
-
-    int getHandOneScore() const {
-        return handOneScore;
-    }
-
-    int getHandTwoScore() const {
-        return handTwoScore;
-    }
-
-    void printHand(const std::vector<std::string> &hand) {
-        for (std::string str: hand) {
-            std::cout << str << std::endl;
-        }
     }
 };
 
+void simulate() {
+}
+
 
 int main() {
-    PokerHandEvaluator dealt("9H 7S TH JS 8D", "9H 7H TH JH 8H");
+    PokerHandEvaluator dealt("AH AS AD 8C 8D", "9H 7H TH JH 8H");
     std::cout << std::endl;
     return 0;
 }
