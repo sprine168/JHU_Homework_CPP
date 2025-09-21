@@ -168,6 +168,7 @@ private:
         return false;
     }
 
+
     /**
      * @brief This function returns points based on what kind of pair the player has
      *
@@ -186,14 +187,17 @@ private:
      *
      *      If not cards are found, the numerical rank of the card will be returned A = 14, K = 13, Q = 12 ..., 2 = 2
      *
+     *      The values of the cards are added to the score in case a of a tie.
+     *
      * @param hand
      * @param flush
+     * @param straight
      * @return Points are returned for the evaluation of the two hands.
      *
      */
     int checkPairings(const std::vector<int> &hand, const bool &flush, const bool &straight) const {
-        std::vector<std::pair<int, int> > countPairs;
-        std::map<int, int> count;
+        auto countPairs = std::vector<std::pair<int, int> >{};
+        auto count = std::map<int, int>{};
 
         for (int i = 0; i < hand.size(); i++) {
             count[hand[i]] += 1;
@@ -203,61 +207,68 @@ private:
             countPairs.emplace_back(iterator.first, iterator.second);
         }
 
+        // Checking for four of a kind and full house
         if (countPairs.size() == 2) {
-            if (countPairs[0].second == 4 || countPairs[1].second == 4) {
-                // Four of a kind check
-                std::cout << "Found of a Kind" << std::endl;
-                return 90;
-            } else if (countPairs[0].second == 3 || countPairs[1].second == 3) {
-                // Full House Check
-                std::cout << "Full House" << std::endl;
-                return 80;
+            for (const auto &countPair: countPairs) {
+                if (countPair.second == 4) {
+                    std::cout << "Four of a Kind" << std::endl;
+                    return 90 + countPair.first;
+                }
+                if (countPair.second == 3) {
+                    std::cout << "Full House" << std::endl;
+                    return 80 + countPair.first;
+                }
             }
         }
-        /* Checking for two pair ( 2 x 2 x 1 ) && three pair ( 3 x 1 x 1 ) */
+
+        /* Checking for three of a kind (3 x 1 x 1) && two pairs (2 x 2 x 1) */
         else if (countPairs.size() == 3) {
-            if (countPairs[0].second == 2 || countPairs[1].second == 2 || countPairs[2].second == 2) {
-                std::cout << "Two Pair" << std::endl;
-                return 50;
-            }
-            if (countPairs[0].second == 3 || countPairs[1].second == 3 || countPairs[2].second == 3) {
-                std::cout << "Three of a Kind" << std::endl;
-                return 40;
+            for (const auto &countPair: countPairs) {
+                if (countPair.second == 3) {
+                    std::cout << "Three of a Kind" << std::endl;
+                    return 50 + countPair.first;
+                }
+                if (countPair.second == 2) {
+                    std::cout << "Two Pair" << std::endl;
+                    return 40 + countPair.first;
+                }
             }
         }
+
         /* Checking for one pair ( 2 x 1 x 1 x 1 ) */
         else if (countPairs.size() == 4) {
-            std::cout << "One Pair" << std::endl;
-            return 30;
+            for (const auto &countPair: countPairs) {
+                if (countPair.second == 2) {
+                    std::cout << "Pair" << std::endl;
+                    return 30 + countPair.first;
+                }
+            }
         }
 
-        /* Checking for straight flush, straight, flush, and royal flush*/
+        /* Checking for a straight flush, straight, flush, and royal flush*/
         else if (countPairs.size() == 5) {
-            bool straight = checkStraight(hand);
-
             if (checkRoyalCards(hand) && straight) {
                 std::cout << "Royal Flush" << std::endl;
-                return 110;
+                return 110 + countPairs[4].first;
             }
 
             if (flush && straight) {
                 std::cout << "Straight Flush" << std::endl;
-                return 100;
+                return 100 + countPairs[4].first;
             }
 
             if (flush) {
                 std::cout << "Flush" << std::endl;
-                return 70;
+                return 70 + countPairs[4].first;
             }
             if (straight) {
                 std::cout << "Straight" << std::endl;
-                return 60;
+                return 60 + countPairs[4].first;
             }
         }
         std::cout << "High Card" << std::endl;
         return countPairs[4].first;
     }
-
 
     /**
      * @brief Compares hands based on ranks for each hand. Going from highest rank to lowest rank of cards
@@ -269,9 +280,6 @@ private:
         bool handOneFlush = checkFlush(handOne);
         bool handTwoFlush = checkFlush(handTwo);
 
-        int handOnePoints = 0;
-        int handTwoPoints = 0;
-
         // Pull just the ranks out of the hand and separate the suits
         std::vector<int> handOneRanks = pullCardRank(handOne);
         std::vector<int> handTwoRanks = pullCardRank(handTwo);
@@ -280,14 +288,26 @@ private:
         std::sort(handOneRanks.begin(), handOneRanks.end());
         std::sort(handTwoRanks.begin(), handTwoRanks.end());
 
-        bool handOneStraight = checkStraight(handOneRanks);
-        bool handTwoStraight = checkStraight(handTwoRanks);
+        const bool handOneStraight = checkStraight(handOneRanks);
+        const bool handTwoStraight = checkStraight(handTwoRanks);
 
-        handOnePoints = checkPairings(handOneRanks, handOneFlush, handOneStraight);
-        handTwoPoints = checkPairings(handTwoRanks, handTwoFlush, handTwoStraight);
+        const int handOnePoints = checkPairings(handOneRanks, handOneFlush, handOneStraight);
+        const int handTwoPoints = checkPairings(handTwoRanks, handTwoFlush, handTwoStraight);
 
-        std::cout << "Hand One has: " << handOnePoints << " points" << std::endl;
-        std::cout << "Hand Two has: " << handTwoPoints << " points" << std::endl;
+        if (handOnePoints > handTwoPoints) {
+            std::cout << "Hand One Wins:" << std::endl;
+        } else if (handOnePoints < handTwoPoints) {
+            std::cout << "Hand Two Wins" << std::endl;
+        } else if (handOnePoints == handTwoPoints) {
+            std::cout << "Tie" << std::endl;
+        }
+
+
+        // std::cout << "Hand one high card is: " << handOnePoints.second << std::endl;
+        // std::cout << "Hand One has: " << handOnePoints.first << " points" << std::endl;
+        //
+        // std::cout << "Hand two high card is: " << handTwoPoints.second << std::endl;
+        // std::cout << "Hand Two has: " << handTwoPoints.first << " points" << std::endl;
     }
 
 
@@ -342,12 +362,57 @@ public:
     }
 };
 
+
 void simulate() {
-    PokerHandEvaluator("AH AS 8D 8C 8D", "9H 7H 2H JH 8H");
-    PokerHandEvaluator("AH 8S 5D 8C 8D", "9H 7H TH JH 8H");
-    PokerHandEvaluator("AH AS AD 8C 8D", "9H 7H TH JH 8H");
-    PokerHandEvaluator("2H 3S 4D 5C 6D", "9H 7H TH JH 8H");
-    PokerHandEvaluator("9H 7S TH JS 8D", "9H 7H TH JH 8H");
+    // Royal Flush
+    PokerHandEvaluator("AH KH QH JH TH", "KS QS JS TS 9S");
+    PokerHandEvaluator("KS QS JS TS 9S", "AH KH QH JH TH");
+    PokerHandEvaluator("AH KH QH JH TH", "AD KD QD JD TD");
+
+    // Straight Flush
+    PokerHandEvaluator("9H 8H 7H 6H 5H", "8S 7S 6S 5S 4S");
+    PokerHandEvaluator("8S 7S 6S 5S 4S", "9H 8H 7H 6H 5H");
+    PokerHandEvaluator("7D 6D 5D 4D 3D", "7C 6C 5C 4C 3C");
+
+    // Four of a Kind
+    PokerHandEvaluator("9C 9D 9H 9S 2D", "8C 8D 8H 8S AD");
+    PokerHandEvaluator("8C 8D 8H 8S AD", "9C 9D 9H 9S 2D");
+    PokerHandEvaluator("5H 5D 5S 5C AH", "5C 5S 5D 5H AD");
+
+    // Full House
+    PokerHandEvaluator("KH KD KS 2C 2D", "QH QD QS AC AD");
+    PokerHandEvaluator("QH QD QS AC AD", "KH KD KS 2C 2D");
+    PokerHandEvaluator("7H 7D 7S 4C 4D", "7C 7S 7D 4H 4S");
+
+    // Flush
+    PokerHandEvaluator("AD KD 9D 6D 2D", "AS QS JS 9S 4S");
+    PokerHandEvaluator("AS QS JS 9S 4S", "AD KD 9D 6D 2D");
+    PokerHandEvaluator("QH 9H 7H 5H 2H", "QD 9D 7D 5D 2D");
+
+    // Straight
+    PokerHandEvaluator("9C 8D 7H 6S 5C", "8C 7D 6H 5S 4C");
+    PokerHandEvaluator("8C 7D 6H 5S 4C", "9C 8D 7H 6S 5C");
+    PokerHandEvaluator("6H 5D 4C 3S 2H", "6C 5S 4D 3H 2C");
+
+    // Three of a Kind
+    PokerHandEvaluator("7H 7D 7S KC 3D", "6H 6D 6S AC 2D");
+    PokerHandEvaluator("6H 6D 6S AC 2D", "7H 7D 7S KC 3D");
+    PokerHandEvaluator("4C 4D 4H QS 9D", "4S 4H 4D QC 9H");
+
+    // Two Pair
+    PokerHandEvaluator("QH QD 9S 9C 3H", "JH JD 8S 8C 4H");
+    PokerHandEvaluator("JH JD 8S 8C 4H", "QH QD 9S 9C 3H");
+    PokerHandEvaluator("8C 8D 5S 5H AH", "8S 8H 5D 5C AD");
+
+    // One Pair
+    PokerHandEvaluator("AH AS 4C 7D 9S", "KH KS QC 7C 8H");
+    PokerHandEvaluator("KH KS QC 7C 8H", "AH AS 4C 7D 9S");
+    PokerHandEvaluator("TD TH QC 9S 4D", "TS TC QD 9C 4S");
+
+    // High Card
+    PokerHandEvaluator("AC QS 9D 6H 3C", "KC TS 8D 5H 2C");
+    PokerHandEvaluator("KC TS 8D 5H 2C", "AC QS 9D 6H 3C");
+    PokerHandEvaluator("AH QD 9C 6S 3H", "AD QS 9H 6C 3D");
 }
 
 
