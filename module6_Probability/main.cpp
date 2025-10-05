@@ -22,6 +22,7 @@ public:
         this->value = p;
     }
     Probability() { }
+    ~Probability() = default;
 
 
     /*---------------------------------------------------
@@ -77,6 +78,7 @@ private:
 
 public:
     Event() { randomNumber(); }
+    ~Event() = default;
 
     void generateProbability() { randomNumber(); }
     double getEventNumber() const { return this->eventNumber; }
@@ -101,6 +103,7 @@ public:
         this->a = a;
         this->b = b;
     }
+    ~EventGenerator() = default;
 
     void generateEvent(const int &eventNumber) const {
         std::cout << "---------    Generated Event: " << eventNumber << " ------------" << std::endl;
@@ -112,13 +115,12 @@ public:
         std::cout << "A  &  B:  "        << (a & b).getValue()      << std::endl;
         std::cout << "A  OR B:  "        << (a | b).getValue()      << std::endl;
         std::cout << "A XOR B:  "        << (a ^ b).getValue()      << std::endl;
-        std::cout << "NOT A or NOT B: "  << 1 - (a | b).getValue()  << std::endl;
+        std::cout << "NOT A and NOT B: " << (~a & ~b).getValue()    << std::endl;
         std::cout << "A NOT B:  "        << (a - b).getValue()      << std::endl;
         std::cout << "B NOT A:  "        << (b - a).getValue()      << std::endl;
         std::cout << "----------------------------------------------------" << std::endl;
     }
 };
-
 
 int main() {
 
@@ -145,7 +147,6 @@ int main() {
             event.generateEvent(i);
         }
 
-
     } catch (const std::out_of_range &e) {
         std::cout << e.what() << std::endl;
         return 1;
@@ -154,6 +155,5 @@ int main() {
         std::cout << e.what() << std::endl;
         return 1;
     }
-
     return 0;
 }
