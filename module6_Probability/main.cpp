@@ -12,25 +12,19 @@ private:
         }
     }
 
-    void validateInput(const std::string &p) {
-        if (typeid(p) != typeid(double)) {
-            throw std::invalid_argument("Invalid type passed for argument. Expecting a floating point number");
-        }
-    }
-
-
-
 public:
-    Probability(double p) {
+    Probability(const double &p) {
         validateInput(p);
         this->value = p;
     }
 
-    Probability(std::string p) {
-        validateInput(p);
+    Probability() {
     }
 
-    Probability() { }
+    void setValue(const double &p) {
+        validateInput(p);
+        this->value = p;
+    }
 
     ~Probability() = default;
 
@@ -67,10 +61,9 @@ public:
 };
 
 class Event {
-    double eventNumber;
+    double eventNumber = 0;
 
 private:
-
     // Generating a random number between 0 and 1
     void randomNumber() {
         // Getting clock time from the local computer for the seed
@@ -107,6 +100,13 @@ private:
     Event eventA{};
     Event eventB{};
 
+    void reset() {
+        this->a = {};
+        this->b = {};
+        this->eventA = {};
+        this->eventB = {};
+    }
+
 public:
     EventGenerator(const Probability &a, const Probability &b, const Event &eventA, const Event &eventB) {
         this->eventA = eventA;
@@ -116,24 +116,27 @@ public:
     }
 
     ~EventGenerator() = default;
+    EventGenerator() = default;
 
-    static void generateEvent(const int &numberEvents) {
+    void generateEvent(const int &numberEvents) {
         for (int i = 1; i <= numberEvents; i++) {
             try {
-                Event eventA;
-                Event eventB;
+                this->eventA.generateProbability();
+                this->eventB.generateProbability();
 
-                Probability a(eventA.getEventNumber());
-                Probability b(eventB.getEventNumber());
+                this->a.setValue(this->eventA.getEventNumber());
+                this->b.setValue(this->eventB.getEventNumber());
 
-                EventGenerator event(a, b, eventA, eventB);
-                event.printEvent(i);
+                printEvent(i);
             } catch (const std::out_of_range &e) {
                 std::cout << e.what() << std::endl;
             } catch (const std::invalid_argument &e) {
                 std::cout << e.what() << std::endl;
             }
         }
+
+        // Clear out values
+        reset();
     }
 
     void printEvent(const int &eventNumber) const {
@@ -155,15 +158,16 @@ public:
 
 int main() {
     // Running a hardcoded test
-    const Event eventA;
-    const Event eventB;
-    const Probability a(0.04);
-    const Probability b(0.02);
-    const EventGenerator event(a, b, eventA, eventB);
+    Event eventA;
+    Event eventB;
+    Probability a(0.04);
+    Probability b(0.02);
+    EventGenerator event(a, b, eventA, eventB);
     event.printEvent(-1);
 
-    // Generating 4 independent random events
-    EventGenerator::generateEvent(4);
+    // Generate 4 events
+    EventGenerator generate;
+    generate.generateEvent(4);
 
     return 0;
 }
