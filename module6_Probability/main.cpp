@@ -1,34 +1,43 @@
 #include <iostream>
 #include <random>
 
-
 class Probability {
 private:
     double value = 0.0;
 
     // Probabilities must be between 0 and 1
-    static void validateInput(double &p) {
+    void validateInput(const double &p) {
         if (p < 0 || p > 1) {
             throw std::out_of_range("Invalid probability. Probability must be between 0.0 and 1.0");
         }
+    }
+
+    void validateInput(const std::string &p) {
         if (typeid(p) != typeid(double)) {
             throw std::invalid_argument("Invalid type passed for argument. Expecting a floating point number");
         }
     }
+
+
 
 public:
     Probability(double p) {
         validateInput(p);
         this->value = p;
     }
+
+    Probability(std::string p) {
+        validateInput(p);
+    }
+
     Probability() { }
+
     ~Probability() = default;
 
 
     /*---------------------------------------------------
          Operator Overloading for Independent Events
      ---------------------------------------------------*/
-
     // Logical AND: A & B => ( A * B )
     Probability operator&(const Probability &other) const { return {this->value * other.value}; }
 
@@ -48,20 +57,21 @@ public:
     // NOT: ~A => ( 1 - A )
     Probability operator~() const { return {1.0 - this->value}; }
 
-     /*---------------------------------------------
-                Getters and Setters Start Here
-      ---------------------------------------------*/
+    /*---------------------------------------------
+               Getters and Setters Start Here
+     ---------------------------------------------*/
     // getter for the probability entered
     double getValue() const {
         return this->value;
     }
-
 };
 
 class Event {
     double eventNumber;
 
 private:
+
+    // Generating a random number between 0 and 1
     void randomNumber() {
         // Getting clock time from the local computer for the seed
         std::random_device randomDevice;
@@ -78,6 +88,7 @@ private:
 
 public:
     Event() { randomNumber(); }
+
     ~Event() = default;
 
     void generateProbability() { randomNumber(); }
@@ -89,12 +100,12 @@ public:
 class EventGenerator {
 private:
     // Initializing a and b with a default constructor
-    Probability a {};
-    Probability b {};
+    Probability a{};
+    Probability b{};
 
     // Initializing the event a and event b
-    Event eventA {};
-    Event eventB {};
+    Event eventA{};
+    Event eventB{};
 
 public:
     EventGenerator(const Probability &a, const Probability &b, const Event &eventA, const Event &eventB) {
@@ -103,57 +114,56 @@ public:
         this->a = a;
         this->b = b;
     }
+
     ~EventGenerator() = default;
 
-    void generateEvent(const int &eventNumber) const {
+    static void generateEvent(const int &numberEvents) {
+        for (int i = 1; i <= numberEvents; i++) {
+            try {
+                Event eventA;
+                Event eventB;
+
+                Probability a(eventA.getEventNumber());
+                Probability b(eventB.getEventNumber());
+
+                EventGenerator event(a, b, eventA, eventB);
+                event.printEvent(i);
+            } catch (const std::out_of_range &e) {
+                std::cout << e.what() << std::endl;
+            } catch (const std::invalid_argument &e) {
+                std::cout << e.what() << std::endl;
+            }
+        }
+    }
+
+    void printEvent(const int &eventNumber) const {
         std::cout << "---------    Generated Event: " << eventNumber << " ------------" << std::endl;
         std::cout << "A: " << a.getValue() << std::endl;
         std::cout << "B: " << b.getValue() << std::endl;
 
-        std::cout << "  NOT A:  "        << (~a).getValue()         << std::endl;
-        std::cout << "  NOT B:  "        << (~b).getValue()         << std::endl;
-        std::cout << "A  &  B:  "        << (a & b).getValue()      << std::endl;
-        std::cout << "A  OR B:  "        << (a | b).getValue()      << std::endl;
-        std::cout << "A XOR B:  "        << (a ^ b).getValue()      << std::endl;
-        std::cout << "NOT A and NOT B: " << (~a & ~b).getValue()    << std::endl;
-        std::cout << "A NOT B:  "        << (a - b).getValue()      << std::endl;
-        std::cout << "B NOT A:  "        << (b - a).getValue()      << std::endl;
+        std::cout << "  NOT A:  " << (~a).getValue() << std::endl;
+        std::cout << "  NOT B:  " << (~b).getValue() << std::endl;
+        std::cout << "A  &  B:  " << (a & b).getValue() << std::endl;
+        std::cout << "A  OR B:  " << (a | b).getValue() << std::endl;
+        std::cout << "A XOR B:  " << (a ^ b).getValue() << std::endl;
+        std::cout << "NOT A and NOT B: " << (~a & ~b).getValue() << std::endl;
+        std::cout << "A NOT B:  " << (a - b).getValue() << std::endl;
+        std::cout << "B NOT A:  " << (b - a).getValue() << std::endl;
         std::cout << "----------------------------------------------------" << std::endl;
     }
 };
 
 int main() {
+    // Running a hardcoded test
+    const Event eventA;
+    const Event eventB;
+    const Probability a(0.04);
+    const Probability b(0.02);
+    const EventGenerator event(a, b, eventA, eventB);
+    event.printEvent(-1);
 
-    try {
-        // Running a hardcoded test
-        Event eventA;
-        Event eventB;
+    // Generating 4 independent random events
+    EventGenerator::generateEvent(4);
 
-        Probability a(0.04);
-        Probability b(0.02);
-
-        EventGenerator event(a, b, eventA, eventB);
-        event.generateEvent(0);
-
-        // Running 10 random events through an event generator
-        for (int i = 1; i <= 4; i++) {
-            Event eventA;
-            Event eventB;
-
-            Probability a(eventA.getEventNumber());
-            Probability b(eventB.getEventNumber());
-
-            EventGenerator event = EventGenerator(a, b, eventA, eventB);
-            event.generateEvent(i);
-        }
-
-    } catch (const std::out_of_range &e) {
-        std::cout << e.what() << std::endl;
-        return 1;
-
-    } catch (const std::invalid_argument &e) {
-        std::cout << e.what() << std::endl;
-        return 1;
-    }
     return 0;
 }
