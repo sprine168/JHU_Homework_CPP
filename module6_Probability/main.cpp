@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <random>
@@ -18,12 +19,6 @@ private:
         }
     }
 
-protected:
-    void setValue(double value) {
-        validateInput(value);
-        this->value = value;
-    }
-
 public:
     // Support construction from a double (with validation)
     Probability(const double &p) {
@@ -31,17 +26,24 @@ public:
         this->value = p;
     }
 
-    ~Probability() = default;
 
+
+    ~Probability() = default;
     Probability() = default;
 
-    // Not a binary operator and does assignment
-    Probability &operator=(const double &p) {
-        validateInput(p);
-        this->value = p;
+    // Generate a random number between 0 and 1
+    void generateRandomProbability() {
+        // Getting clock time from the local computer for the seed
+        std::random_device randomDevice;
 
-        // Returns reference for the modified object containing the assigned value
-        return *this;
+        // Seeding the random number generator from the local computer clock time
+        std::mt19937_64 mtGenerator(randomDevice());
+
+        // Setting the range of distribution
+        std::uniform_real_distribution<> distribution(0, 1);
+
+        // Generating the random number and storing it in the eventNumber data member
+        setValue(distribution(mtGenerator));
     }
 
     /*---------------------------------------------
@@ -50,6 +52,19 @@ public:
     // getter for the probability entered
     double getValue() const {
         return this->value;
+    }
+
+    void setValue(double value) {
+        validateInput(value);
+        this->value = value;
+    }
+
+    // Not a binary operator and performs the assignment operation
+    Probability &operator=(const double &p) {
+        validateInput(p);
+        this->value = p;
+        // Returns reference for the modified object containing the assigned value
+        return *this;
     }
 
     /*
@@ -70,51 +85,32 @@ public:
 
      Operator Overloading for Independent Events
  ---------------------------------------------------*/
-Probability operator&(const Probability &lhs, const Probability &rhs) {  // Logical AND: A & B => ( A * B )
+
+// Logical AND: A & B => ( A * B )
+Probability operator&(const Probability &lhs, const Probability &rhs) {
     return {lhs.value * rhs.value};
 }
-Probability operator|(const Probability &lhs, const Probability &rhs) {  // Logical OR: A | B => ( A + B - A * B )
+
+// Logical OR: A | B => ( A + B - A * B )
+Probability operator|(const Probability &lhs, const Probability &rhs) {
     return {lhs.value + rhs.value - lhs.value * rhs.value};
 }
-Probability operator^(const Probability &lhs, const Probability &rhs) {  // XOR: A ^ B => ( A + B - 2 * A * B )
+
+// XOR: A ^ B => ( A + B - 2 * A * B )
+Probability operator^(const Probability &lhs, const Probability &rhs) {
     return {lhs.value + rhs.value - 2 * lhs.value * rhs.value};
 }
-Probability operator-(const Probability &lhs, const Probability &rhs) {  // Difference: A - B => ( A * ( 1 - B ) )
+
+// Difference: A - B => ( A * ( 1 - B ) )
+Probability operator-(const Probability &lhs, const Probability &rhs) {
     return {lhs.value * (1.0 - rhs.value)};
 }
-Probability operator~(const Probability &rhs) {  // Not: ~A => (1 - A). Can pass B value to get not B
+
+// Not: ~A => (1 - A). Can pass B value to get not B
+Probability operator~(const Probability &rhs) {
     return {1.0 - rhs.value};
 }
 
-/*---------------------------------------------------
-     Supporting Classes for Testing and Demonstration
- ---------------------------------------------------*/
-
-class RandomProbability : public Probability {
-
-private:
-    // Generating a random number between 0 and 1
-    void randomNumber() {
-        // Getting clock time from the local computer for the seed
-        std::random_device randomDevice;
-
-        // Seeding the random number generator from the local computer clock time
-        std::mt19937_64 mtGenerator(randomDevice());
-
-        // Setting the range of distribution
-        std::uniform_real_distribution<> distribution(0, 1);
-
-        // Generating the random number and storing it in the eventNumber data member
-        setValue(distribution(mtGenerator));
-    }
-
-public:
-    RandomProbability() { randomNumber(); }
-    ~RandomProbability() = default;
-
-    void generateProbability() { randomNumber(); }
-    double getEventNumber() const { return getValue(); }
-};
 
 // Generate events based on a random number and the probabilities or A and/or B
 class EventGenerator {
@@ -123,39 +119,27 @@ private:
     Probability a;
     Probability b;
 
-    // Initializing the event a and event b
-    RandomProbability eventA{};
-    RandomProbability eventB{};
-
+    // Resetting using the Assignment operator
     void reset() {
         a = 0.0;
         b = 0.0;
-        eventA = {};
-        eventB = {};
     }
 
 public:
-    EventGenerator(const Probability &a, const Probability &b, const RandomProbability &eventA, const RandomProbability &eventB) {
-        this->eventA = eventA;
-        this->eventB = eventB;
+    // Initializing the EventGenerator to simulate independent probabilities
+    EventGenerator(const Probability &a, const Probability &b) {
         this->a = a;
         this->b = b;
     }
-
     ~EventGenerator() = default;
-
     EventGenerator() = default;
 
+    // Generate an event
     void generateEvent(const int &numberEvents) {
         for (int i = 1; i <= numberEvents; i++) {
             try {
-                eventA.generateProbability();
-                eventB.generateProbability();
-
-                // Assignment of a and b (calling overloaded operator=)
-                a = eventA.getEventNumber();
-                b = eventB.getEventNumber();
-
+                a.generateRandomProbability();
+                b.generateRandomProbability();
                 printEvent(i);
             } catch (const std::out_of_range &e) {
                 std::cout << e.what() << std::endl;
@@ -186,20 +170,29 @@ public:
 
 int main() {
     // Running a hardcoded test
-    RandomProbability eventA;
-    RandomProbability eventB;
-    Probability a(0.04);        // Alternatively, with the default constructor could be a = 0.04
-    Probability b(0.02);        // Alternatively, with the default constructor could be b = 0.02
-    EventGenerator event(a, b, eventA, eventB);
+    Probability a = 0.04; // Alternatively, with the default constructor could be a = 0.04
+    Probability b(0.02); // Alternatively, with the default constructor could be b = 0.02
+    EventGenerator event(a, b);
     event.printEvent(-1);
 
     // Generate 4 events
     EventGenerator generate;
     generate.generateEvent(4);
 
+    // Testing assignment operator
+    Probability testAssignmentA;
+    Probability testAssignmentB;
+
+    testAssignmentA = .899473;
+    testAssignmentB = 0.00355;
+
+    std::cout << "Test Assignment A Value is: " << testAssignmentA.getValue() << std::endl;
+    std::cout << "Test Assignment A Value is: " << testAssignmentB.getValue() << std::endl;
+
     // Testing invalid inputs
     const int SIZE = 5;
     const double invalidValues[SIZE] = {-1.5, -0.0000000000000001, 1.0000001, 1.05, 2};
+
     Probability invalid;
 
     // Testing inputs that won't work
