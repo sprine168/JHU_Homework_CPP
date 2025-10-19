@@ -4,6 +4,9 @@
 #include <memory>
 
 /**
+ *
+ * Completed this assignment using the decorator design pattern for this assignment.
+ * 
  * Step 1:
  * Set up the classes necessary for the requirements: Node, Constant, Variable, Add, Sub, Mul, Div.
  *
@@ -46,7 +49,7 @@ public:
     // Allows the entire node to be printed out
     virtual std::string toString() const = 0;
 
-    // Calculates the derivate based on the operator rule
+    // Calculates the derivative based on the operator rule
     virtual std::shared_ptr<Node> derivative(const std::string &var) const = 0;
 };
 
@@ -64,9 +67,9 @@ public:
     std::shared_ptr<Node> derivative(const std::string &var) const override {
         return std::make_shared<Constant>(0);
     }
-
     std::string toString() const override { return "(" + std::to_string(this->value) + ")"; }
 };
+
 
 class Variable : public Node {
     std::string name;
@@ -87,7 +90,6 @@ public:
         if (name == var) { return std::make_shared<Constant>(1.0); }
         return std::make_shared<Constant>(0.0);
     }
-
     std::string toString() const override { return "(" + this->name + ")"; }
 };
 
@@ -116,7 +118,6 @@ public:
         std::shared_ptr<Node> dv = right->derivative(var);
         return std::make_shared<Add>(du, dv);
     }
-
     std::string toString() const override { return "(" + this->left->toString() + " + " + this->right->toString() + ")"; }
 };
 
@@ -134,7 +135,6 @@ public:
         std::shared_ptr<Node> dv = right->derivative(var);
         return std::make_shared<Sub>(du, dv);
     }
-
     std::string toString() const override { return "(" + this->left->toString() + " - " + this->right->toString() + ")"; }
 };
 
@@ -156,9 +156,9 @@ public:
 
         return std::make_shared<Add>(leftDu, rightDv);
     }
-
     std::string toString() const override { return "(" + this->left->toString() + " * " + this->right->toString() + ")"; }
 };
+
 
 class Div : public Operator {
 public:
@@ -167,6 +167,7 @@ public:
     double evaluate(std::map<std::string, double> symbolTable) const override {
         return this->left->evaluate(symbolTable) / this->right->evaluate(symbolTable);
     }
+
 
     std::shared_ptr<Node> derivative(const std::string& var) const override {
         std::shared_ptr<Node> du = left->derivative(var);
@@ -178,12 +179,12 @@ public:
         std::shared_ptr<Node> denominator = std::make_shared<Mul>(right, right);
         return std::make_shared<Div>(numerator, denominator);
     }
-
     std::string toString() const override { return "(" + this->left->toString() + " / " + this->right->toString() + ")"; }
 };
 
 
 int main() {
+
     // Create a symbol table
     std::map<std::string, double> symbolTable;
     symbolTable["Xray"] = 2.0;
@@ -205,12 +206,12 @@ int main() {
         )
     );
 
-    // Homework Assignment Test One
+    // Test One
     std::cout << node1->toString() << std::endl;
     double resultOne = node1->evaluate(symbolTable);
     std::cout << "Result d = " << std::setprecision(2) << resultOne << "\n" << std::endl;
 
-    // Homework Assignment Test Two
+    // Test Two
     std::shared_ptr<Node> node2;
     node2 = node1->derivative("Xray");
     std::cout << node2->toString() << std::endl;
