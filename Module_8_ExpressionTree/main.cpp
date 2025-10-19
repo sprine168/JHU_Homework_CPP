@@ -5,8 +5,13 @@
 
 /**
  *
- * Completed this assignment using the decorator design pattern for this assignment.
- * 
+ *      ===================================================================================================
+ *              Cpp 11 is being used for this assignment, so the static declaration has
+ *                  internal and external to the class, for memory allocation purposes.
+ *
+ *                          Using the Composite Design Pattern for this assignment.
+ *      ===================================================================================================
+ *
  * Step 1:
  * Set up the classes necessary for the requirements: Node, Constant, Variable, Add, Sub, Mul, Div.
  *
@@ -38,19 +43,23 @@
  *  Contains virtual functions for a destructor, evaluate(), toString(), and derivative()
  *
  */
+
 class Node {
 public:
     // Virtual destructor, deleting derived classes from the base class
     virtual ~Node() = default;
 
     // Using virtual functions so that every subclass will be able to implement these functions
-    virtual double evaluate(std::map<std::string, double> symbolTable) const = 0;
+    virtual double evaluate() const = 0;
 
     // Allows the entire node to be printed out
     virtual std::string toString() const = 0;
 
     // Calculates the derivative based on the operator rule
     virtual std::shared_ptr<Node> derivative(const std::string &var) const = 0;
+
+    // Note: Using C++ 11 so I can't use an inline declaration and initialization
+    static std::shared_ptr<std::map<std::string, double>> symbolTable;
 };
 
 class Constant : public Node {
@@ -59,7 +68,7 @@ class Constant : public Node {
 public:
     explicit Constant(const double &v) : value(v) { }
 
-    double evaluate(std::map<std::string, double> symbolTable) const override {
+    double evaluate() const override {
         return this->value;
     }
 
@@ -75,11 +84,12 @@ class Variable : public Node {
     std::string name;
 
 public:
-    explicit Variable(const std::string &name) : name(name) { }
+    explicit Variable(const std::string &name) : name(name) {}
 
-    double evaluate(std::map<std::string, double> symbolTable) const override {
-        auto it = symbolTable.find(this->name);
-        if (it != symbolTable.end()) {
+    double evaluate() const override {
+        if (Node::symbolTable == nullptr || Node::symbolTable->empty()) { return 0; }
+        auto it = Node::symbolTable->find(this->name);
+        if (it != Node::symbolTable->end()) {
             return it->second;
         }
         return 0;
@@ -90,6 +100,7 @@ public:
         if (name == var) { return std::make_shared<Constant>(1.0); }
         return std::make_shared<Constant>(0.0);
     }
+
     std::string toString() const override { return "(" + this->name + ")"; }
 };
 
@@ -109,8 +120,8 @@ class Add : public Operator {
 public:
     Add(const std::shared_ptr<Node> &left, const std::shared_ptr<Node> &right) : Operator(left, right) { }
 
-    double evaluate(std::map<std::string, double> symbolTable) const override {
-        return this->left->evaluate(symbolTable) + this->right->evaluate(symbolTable);
+    double evaluate() const override {
+        return this->left->evaluate() + this->right->evaluate();
     }
 
     std::shared_ptr<Node> derivative(const std::string& var) const override {
@@ -126,8 +137,8 @@ class Sub : public Operator {
 public:
     Sub(const std::shared_ptr<Node> &left, const std::shared_ptr<Node> &right) : Operator(left, right) { }
 
-    double evaluate(std::map<std::string, double> symbolTable) const override {
-        return this->left->evaluate(symbolTable) - this->right->evaluate(symbolTable);
+    double evaluate() const override {
+        return this->left->evaluate() - this->right->evaluate();
     }
 
     std::shared_ptr<Node> derivative(const std::string& var) const override {
@@ -143,8 +154,8 @@ class Mul : public Operator {
 public:
     Mul(const std::shared_ptr<Node> &left, const std::shared_ptr<Node> &right) : Operator(left, right) { }
 
-    double evaluate(std::map<std::string, double> symbolTable) const override {
-        return this->left->evaluate(symbolTable) * this->right->evaluate(symbolTable);
+    double evaluate() const override {
+        return this->left->evaluate() * this->right->evaluate();
     }
 
     std::shared_ptr<Node> derivative(const std::string& var) const override {
@@ -164,8 +175,8 @@ class Div : public Operator {
 public:
     Div(const std::shared_ptr<Node> &left, const std::shared_ptr<Node> &right) : Operator(left, right) { }
 
-    double evaluate(std::map<std::string, double> symbolTable) const override {
-        return this->left->evaluate(symbolTable) / this->right->evaluate(symbolTable);
+    double evaluate() const override {
+        return this->left->evaluate() / this->right->evaluate();
     }
 
 
@@ -182,14 +193,13 @@ public:
     std::string toString() const override { return "(" + this->left->toString() + " / " + this->right->toString() + ")"; }
 };
 
+std::shared_ptr<std::map<std::string, double>> Node::symbolTable = std::make_shared<std::map<std::string, double>>();
 
 int main() {
 
-    // Create a symbol table
-    std::map<std::string, double> symbolTable;
-    symbolTable["Xray"] = 2.0;
-    symbolTable["Yellow"] = 3.0;
-    symbolTable["Zebra"] = 5.0;
+    Node::symbolTable->emplace("Xray", 2.0);
+    Node::symbolTable->emplace("Yellow", 3.0);
+    Node::symbolTable->emplace("Zebra", 5.0);
 
     // Hand construct: 2.3 * Xray + Yellow * (Zebra - Xray)
     std::shared_ptr<Node> node1 = std::make_shared<Add>(
@@ -208,15 +218,15 @@ int main() {
 
     // Test One
     std::cout << node1->toString() << std::endl;
-    double resultOne = node1->evaluate(symbolTable);
-    std::cout << "Result d = " << std::setprecision(2) << resultOne << "\n" << std::endl;
+    double resultOne = node1->evaluate();
+    std::cout << "Result d = " << resultOne << "\n" << std::endl;
 
     // Test Two
     std::shared_ptr<Node> node2;
     node2 = node1->derivative("Xray");
     std::cout << node2->toString() << std::endl;
-    double derivateResult = node2->evaluate(symbolTable);
-    std::cout << "Result d = " << std::setprecision(2) << derivateResult << std::endl;
+    double derivateResult = node2->evaluate();
+    std::cout << "Result d = " << derivateResult << std::endl;
 
     return 0;
 }
