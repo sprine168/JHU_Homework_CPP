@@ -216,17 +216,32 @@ int main() {
         )
     );
 
+    // TODO Issue with calculating multiple derivatives with values being overwritten
+
     // Test One
     std::cout << node1->toString() << std::endl;
     double resultOne = node1->evaluate();
     std::cout << "Result d = " << resultOne << "\n" << std::endl;
 
     // Test Two
-    std::shared_ptr<Node> node2;
-    node2 = node1->derivative("Xray");
-    std::cout << node2->toString() << std::endl;
-    double derivateResult = node2->evaluate();
-    std::cout << "Result d = " << derivateResult << std::endl;
+    node1 = node1->derivative("Xray");
+    std::cout << "Xray Derivative: " << node1->toString() << std::endl;
+    double derivativeResult = node1->evaluate();
+    std::cout << "Result d = " << derivativeResult << std::endl;
+    //
+    std::cout << std::endl;
+
+    // Note: Yellow and Zebra should both be 3 when calculating derivatives
+
+    // Make independent tests for calculating derivatives
+
+    // Test Three
+    node1 = node1->derivative("Yellow");
+    std::cout << "Yellow Derivative: " << node1->toString() << std::endl;
+    derivativeResult = node1->evaluate();
+    std::cout << "Result d = " << derivativeResult << std::endl;
+
+    std::cout << std::endl;
 
     return 0;
 }
