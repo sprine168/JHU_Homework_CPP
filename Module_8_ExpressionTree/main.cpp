@@ -202,7 +202,7 @@ int main() {
     Node::symbolTable->emplace("Zebra", 5.0);
 
     // Hand construct: 2.3 * Xray + Yellow * (Zebra - Xray)
-    const auto originalNode = std::make_shared<Add>(
+    const std::shared_ptr<Node> originalNode = std::make_shared<Add>(
         std::make_shared<Mul>(
             std::make_shared<Constant>(2.3),
             std::make_shared<Variable>("Xray")
@@ -220,12 +220,10 @@ int main() {
     std::shared_ptr<Node> node2 = originalNode;
     std::shared_ptr<Node> node3 = originalNode;
 
-
     /*     Expression Test One     */
     std::cout << node1->toString() << std::endl;                    // Print out the expression tree
     double resultOne = node1->evaluate();                           // Evaluate the expression
     std::cout << "Result d = " << resultOne << "\n" << std::endl;
-
 
     /*     Derivative Test One     */
     node1 = node1->derivative("Xray");
@@ -233,9 +231,7 @@ int main() {
     double derivativeResult = node1->evaluate();
     std::cout << "Result = " << derivativeResult << std::endl;
 
-    derivativeResult = 0;   // Resetting derivativeResult after each use
     std::cout << std::endl;
-
 
     /*      Derivative Test Two    */
     node2 = node2->derivative("Yellow");
@@ -243,9 +239,7 @@ int main() {
     derivativeResult = node2->evaluate();
     std::cout << "Result = " << derivativeResult << std::endl;
 
-    derivativeResult = 0;   // Resetting derivativeResult after each use
     std::cout << std::endl;
-
 
     /*      Derivative Test Three    */
     node3 = node3->derivative("Zebra");
@@ -253,12 +247,7 @@ int main() {
     derivativeResult = node3->evaluate();
     std::cout << "Result: = " << derivativeResult << std::endl;
 
-    derivativeResult = 0;   // Resetting derivativeResult after each use
     std::cout << std::endl;
-
-    Node::symbolTable->emplace("Xray", 2.0);
-    Node::symbolTable->emplace("Yellow", 3.0);
-    Node::symbolTable->emplace("Zebra", 5.0);
 
     return 0;
 }
