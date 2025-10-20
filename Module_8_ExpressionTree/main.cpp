@@ -63,7 +63,7 @@ public:
 };
 
 class Constant : public Node {
-    double value = 0;
+    double value;
 
 public:
     explicit Constant(const double &v) : value(v) { }
@@ -202,7 +202,7 @@ int main() {
     Node::symbolTable->emplace("Zebra", 5.0);
 
     // Hand construct: 2.3 * Xray + Yellow * (Zebra - Xray)
-    std::shared_ptr<Node> node1 = std::make_shared<Add>(
+    const auto originalNode = std::make_shared<Add>(
         std::make_shared<Mul>(
             std::make_shared<Constant>(2.3),
             std::make_shared<Variable>("Xray")
@@ -216,32 +216,49 @@ int main() {
         )
     );
 
-    // TODO Issue with calculating multiple derivatives with values being overwritten
+    std::shared_ptr<Node> node1 = originalNode;
+    std::shared_ptr<Node> node2 = originalNode;
+    std::shared_ptr<Node> node3 = originalNode;
 
-    // Test One
-    std::cout << node1->toString() << std::endl;
-    double resultOne = node1->evaluate();
+
+    /*     Expression Test One     */
+    std::cout << node1->toString() << std::endl;                    // Print out the expression tree
+    double resultOne = node1->evaluate();                           // Evaluate the expression
     std::cout << "Result d = " << resultOne << "\n" << std::endl;
 
-    // Test Two
+
+    /*     Derivative Test One     */
     node1 = node1->derivative("Xray");
     std::cout << "Xray Derivative: " << node1->toString() << std::endl;
     double derivativeResult = node1->evaluate();
-    std::cout << "Result d = " << derivativeResult << std::endl;
-    //
+    std::cout << "Result = " << derivativeResult << std::endl;
+
+    derivativeResult = 0;   // Resetting derivativeResult after each use
     std::cout << std::endl;
 
-    // Note: Yellow and Zebra should both be 3 when calculating derivatives
 
-    // Make independent tests for calculating derivatives
+    /*      Derivative Test Two    */
+    node2 = node2->derivative("Yellow");
+    std::cout << "Yellow Derivative: " << node2->toString() << std::endl;
+    derivativeResult = node2->evaluate();
+    std::cout << "Result = " << derivativeResult << std::endl;
 
-    // Test Three
-    node1 = node1->derivative("Yellow");
-    std::cout << "Yellow Derivative: " << node1->toString() << std::endl;
-    derivativeResult = node1->evaluate();
-    std::cout << "Result d = " << derivativeResult << std::endl;
-
+    derivativeResult = 0;   // Resetting derivativeResult after each use
     std::cout << std::endl;
+
+
+    /*      Derivative Test Three    */
+    node3 = node3->derivative("Zebra");
+    std::cout << "Zebra Derivative: " << node3->toString() << std::endl;
+    derivativeResult = node3->evaluate();
+    std::cout << "Result: = " << derivativeResult << std::endl;
+
+    derivativeResult = 0;   // Resetting derivativeResult after each use
+    std::cout << std::endl;
+
+    Node::symbolTable->emplace("Xray", 2.0);
+    Node::symbolTable->emplace("Yellow", 3.0);
+    Node::symbolTable->emplace("Zebra", 5.0);
 
     return 0;
 }
