@@ -26,6 +26,7 @@ add_executable(Module10_Elevator
         Floor.h
         Passenger.cpp
         Passenger.h
+        Logger.h
 )
 
 # Link Boost libraries

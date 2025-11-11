@@ -9,6 +9,7 @@
 class Passenger {
 public:
     Passenger(int id, int start, int end, int time);
+    ~Passenger() = default;
 
     // Getters
     int getPassengerId() const { return passengerId; }

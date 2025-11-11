@@ -1,20 +1,15 @@
 #include "Floor.h"
 
-Floor::Floor(int number) : floorNumber(number) {}
+Floor::Floor(int number) : floorNumber(number) { }
 
-void Floor::addPassenger(std::shared_ptr<Passenger> passenger) {
-    waitingPassengers.push(passenger);
-}
+void Floor::addPassenger(const std::shared_ptr<Passenger> passenger) { waitingPassengers.push(passenger); }
 
 std::shared_ptr<Passenger> Floor::getNextPassenger() {
-    if (waitingPassengers.empty()) {
-        return nullptr;
-    }
+    if (waitingPassengers.empty()) { return nullptr; }
+
     auto passenger = waitingPassengers.front();
     waitingPassengers.pop();
     return passenger;
 }
 
-bool Floor::hasWaitingPassengers() const {
-    return !waitingPassengers.empty();
-}
+bool Floor::hasWaitingPassengers() const { return !waitingPassengers.empty(); }

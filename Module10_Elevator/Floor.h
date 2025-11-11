@@ -10,14 +10,15 @@
 
 class Floor {
 public:
-    explicit Floor(int number);
+    Floor(int number);
+    ~Floor() = default;
 
     // Getters
     int getFloorNumber() const { return floorNumber; }
     int getWaitingPassengerCount() const { return waitingPassengers.size(); }
 
     // Queue management
-    void addPassenger(std::shared_ptr<Passenger> passenger);
+    void addPassenger(const std::shared_ptr<Passenger> passenger);
     std::shared_ptr<Passenger> getNextPassenger();
     bool hasWaitingPassengers() const;
 

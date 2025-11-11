@@ -18,6 +18,7 @@ class Elevator {
 public:
     Elevator(int id);
     Elevator(int id, int travelTime);
+    ~Elevator() = default;
 
     // Simulation step - Updated to use Floor objects
     void update(int currentTime, std::vector<std::shared_ptr<Floor>>& floors);

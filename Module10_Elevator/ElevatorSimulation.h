@@ -9,14 +9,14 @@
 #include "Elevator.h"
 #include "Floor.h"
 #include "Passenger.h"
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
+#include "Logger.h"
+
 
 class ElevatorSimulation {
 private:
     static const int BUILDING_FLOORS = 100;
     static const int TOTAL_ELEVATORS = 4;
-    static const int SIMULATION_END_TIME = 200000;
+    static const int SIMULATION_END_TIME = 500000;
 
     std::vector<std::shared_ptr<Elevator>> elevators;
     std::vector<std::shared_ptr<Floor>> floors;  // Changed from queue to Floor objects
@@ -27,8 +27,10 @@ private:
     int floorTravelTime;
 
 public:
-    ElevatorSimulation();
+    ElevatorSimulation() = default;
     ElevatorSimulation(int floorTravelTime);
+
+    ~ElevatorSimulation() = default;
 
     // Loading data
     void loadPassengersFromCSV(const std::string& filename);
@@ -38,7 +40,7 @@ public:
     void updateSimulation();
 
     // Results
-    void printResults(std::string);
+    void printResults(const std::string &);
     double getAverageWaitTime() const;
     double getAverageTravelTime() const;
     int getSimulationTime() const { return currentTime; }
