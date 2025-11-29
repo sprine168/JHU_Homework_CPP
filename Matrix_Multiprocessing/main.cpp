@@ -25,11 +25,15 @@ private:
     double rightMatrix[Configuration::NUM_ROWS][Configuration::NUM_COLS];
     double resultMatrix[Configuration::NUM_ROWS][Configuration::NUM_COLS];
 
+    double matrixSum = 0;
+
 public:
     // No destructor needed - smart pointers handle cleanup automatically
     ~MatrixCalculator() = default;
 
     MatrixCalculator() { initalizeMatrices(); };
+
+
     // Initialize the class matrices with default values
     void initalizeMatrices() {
         for (int row = 0; row < Configuration::NUM_ROWS; row++) {
@@ -40,6 +44,7 @@ public:
             }
         }
     }
+
 
     // Set the values inside the matrices
     void setMatrices(const double leftMatrix[Configuration::NUM_ROWS][Configuration::NUM_COLS],
@@ -54,18 +59,19 @@ public:
 
     void matrixAdd() {
         startTime = clock();
-        int sum = 0;
         for (int row = 0; row < Configuration::NUM_ROWS; row++) {
             for (int col = 0; col < Configuration::NUM_COLS; col++) {
                 double value = this->leftMatrix[row][col] + this->rightMatrix[row][col];
                 this->resultMatrix[row][col] = value;
-                sum += value;
+                matrixSum += value;
             }
         }
         endTime = clock();
     } // end matrixAdd
     double getElapsedTime() const { return double(endTime - startTime) / CLOCKS_PER_SEC; }
     double getStartTime() const { return startTime; }
+
+    double getSum() const { return matrixSum; }
 
     void printMatrixResult() const {
         // Resetting the output stream
@@ -140,17 +146,14 @@ int main() {
             matrixCalculatorTestFour;
 
     matrixCalculatorTestOne.setMatrices(leftMatrixTestOne, rightMatrixTestOne);
-    matrixCalculatorTestOne.matrixAdd();
-
     matrixCalculatorTestTwo.setMatrices(leftMatrixTestTwo, rightMatrixTestTwo);
-    matrixCalculatorTestTwo.matrixAdd();
-
     matrixCalculatorTestThree.setMatrices(leftMatrixTestThree, rightMatrixTestThree);
-    matrixCalculatorTestThree.matrixAdd();
-
     matrixCalculatorTestFour.setMatrices(leftMatrixTestFour, rightMatrixTestFour);
-    matrixCalculatorTestFour.matrixAdd();
 
+    matrixCalculatorTestOne.matrixAdd();
+    matrixCalculatorTestTwo.matrixAdd();
+    matrixCalculatorTestThree.matrixAdd();
+    matrixCalculatorTestFour.matrixAdd();
 
     // =================================================
     //              Starting Threaded Testing
@@ -182,45 +185,61 @@ int main() {
     cout << "==================================================" << endl;
     matrixCalculatorTestOne.printMatrixResult();
 
-    cout    << "The time elapsed is: "
+    cout << "The time elapsed is: "
             << fixed
             << setprecision(6)
             << matrixCalculatorTestOne.getElapsedTime()
-            << " seconds"
+            << " seconds "
+            << "Total value: "
+            << matrixCalculatorTestOne.getSum()
             << endl;
 
     matrixCalculatorTestTwo.printMatrixResult();
-    cout    << "The time elapsed is: "
+    cout << "The time elapsed is: "
             << fixed
             << setprecision(6)
             << matrixCalculatorTestTwo.getElapsedTime()
-            << " seconds"
+            << " seconds "
+            << "Total value: "
+            << matrixCalculatorTestTwo.getSum()
             << endl;
 
     matrixCalculatorTestThree.printMatrixResult();
-    cout    << "The time elapsed is: "
+    cout << "The time elapsed is: "
             << fixed
             << setprecision(6)
             << matrixCalculatorTestThree.getElapsedTime()
-            << " seconds"
+            << " seconds "
+            << "Total value: "
+            << matrixCalculatorTestThree.getSum()
             << endl;
 
     matrixCalculatorTestFour.printMatrixResult();
-    cout    << "The time elapsed is: "
+    cout << "The time elapsed is: "
             << fixed
             << setprecision(6)
             << matrixCalculatorTestFour.getElapsedTime()
-            << " seconds"
+            << " seconds "
+            << "Total value: "
+            << matrixCalculatorTestFour.getSum()
             << endl;
 
-    cout << "==================================================" << endl;
+
 
     double totalTime = matrixCalculatorTestOne.getElapsedTime() +
                        matrixCalculatorTestTwo.getElapsedTime() +
                        matrixCalculatorTestThree.getElapsedTime() +
                        matrixCalculatorTestFour.getElapsedTime();
 
+    double totalSum = matrixCalculatorTestOne.getSum() +
+                      matrixCalculatorTestTwo.getSum() +
+                      matrixCalculatorTestThree.getSum() +
+                      matrixCalculatorTestFour.getSum();
+
+    cout << "\n\n==================================================" << endl;
+
     cout << "Single Threaded Total Time Spent processing: " << totalTime << endl;
+    cout << "Total sum of matrices: " << totalSum << endl;
 
     cout << "==================================================" << endl;
     cout << "========== Multi - thread Test Results ===========" << endl;
@@ -231,32 +250,39 @@ int main() {
             << fixed
             << setprecision(6)
             << matrixCalculatorThreadTestOne.getElapsedTime()
-            << " seconds"
+            << " seconds "
+            << "Total value: "
+            << matrixCalculatorThreadTestOne.getSum()
             << endl;
 
     matrixCalculatorThreadTestTwo.printMatrixResult();
-    cout    << "The time elapsed is: "
+    cout << "The time elapsed is: "
             << fixed
             << setprecision(6)
             << matrixCalculatorThreadTestTwo.getElapsedTime()
-            <<
-            " seconds"
+            << " seconds "
+            << "Total value: "
+            << matrixCalculatorThreadTestTwo.getSum()
             << endl;
 
     matrixCalculatorThreadTestThree.printMatrixResult();
-    cout    << "The time elapsed is: "
+    cout << "The time elapsed is: "
             << fixed
             << setprecision(6)
             << matrixCalculatorThreadTestThree.getElapsedTime()
-            << " seconds"
+            << " seconds "
+            << "Total value: "
+            << matrixCalculatorThreadTestThree.getSum()
             << endl;
 
     matrixCalculatorThreadTestFour.printMatrixResult();
-    cout    << "The time elapsed is: "
+    cout << "The time elapsed is: "
             << fixed
             << setprecision(6)
             << matrixCalculatorThreadTestFour.getElapsedTime()
-            << " seconds"
+            << " seconds "
+            << "Total value: "
+            << matrixCalculatorThreadTestFour.getSum()
             << endl;
 
     totalTime = matrixCalculatorThreadTestOne.getElapsedTime() +
@@ -264,8 +290,16 @@ int main() {
                 matrixCalculatorThreadTestThree.getElapsedTime() +
                 matrixCalculatorThreadTestFour.getElapsedTime();
 
-    cout << "==================================================" << endl;
+    totalSum = matrixCalculatorThreadTestOne.getSum() +
+               matrixCalculatorThreadTestTwo.getSum() +
+               matrixCalculatorThreadTestThree.getSum() +
+               matrixCalculatorThreadTestFour.getSum();
+
+
+
+    cout << "\n\n==================================================" << endl;
     cout << "Multi - Threaded Total Time Spent processing: " << totalTime << endl;
+    cout << "Total sum of matrices: " << totalSum << endl;
     cout << "==================================================" << endl;
 
     return 0;
