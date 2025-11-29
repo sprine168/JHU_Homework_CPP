@@ -4,55 +4,46 @@
 #include <ctime>
 #include <thread>
 #include <mutex>
-
-
 using namespace std;
 
 
 class Configuration {
 public:
-    static constexpr int NUM_ROWS = 100;
-    static constexpr int NUM_COLS = 100;
+    static constexpr int NUM_ROWS = 5;
+    static constexpr int NUM_COLS = 5;
 };
 
 
 class MatrixCalculator {
 private:
-    // Shared lock to handle possible race conditions
-    mutex shared_mutex;
-
     int endRow = Configuration::NUM_ROWS;
 
     clock_t startTime = 0;
     clock_t endTime = 0;
 
-    unique_ptr<unique_ptr<double[]>[]> leftMatrix;
-    unique_ptr<unique_ptr<double[]>[]> rightMatrix;
-    unique_ptr<unique_ptr<double[]>[]> resultMatrix;
+    double leftMatrix[Configuration::NUM_ROWS][Configuration::NUM_COLS];
+    double rightMatrix[Configuration::NUM_ROWS][Configuration::NUM_COLS];
+    double resultMatrix[Configuration::NUM_ROWS][Configuration::NUM_COLS];
 
 public:
     // No destructor needed - smart pointers handle cleanup automatically
     ~MatrixCalculator() = default;
 
     MatrixCalculator() { initalizeMatrices(); };
-
     // Initialize the class matrices with default values
     void initalizeMatrices() {
-        leftMatrix = make_unique<unique_ptr<double[]>[]>(Configuration::NUM_ROWS);
-        rightMatrix = make_unique<unique_ptr<double[]>[]>(Configuration::NUM_ROWS);
-        resultMatrix = make_unique<unique_ptr<double[]>[]>(Configuration::NUM_ROWS);
-
-        for (int i = 0; i < Configuration::NUM_ROWS; i++) {
-            leftMatrix[i] = make_unique<double[]>(Configuration::NUM_COLS);
-            rightMatrix[i] = make_unique<double[]>(Configuration::NUM_COLS);
-            resultMatrix[i] = make_unique<double[]>(Configuration::NUM_COLS);
+        for (int row = 0; row < Configuration::NUM_ROWS; row++) {
+            for (int col = 0; col < Configuration::NUM_COLS; col++) {
+                leftMatrix[row][col] = 0;
+                rightMatrix[row][col] = 0;
+                resultMatrix[row][col] = 0;
+            }
         }
     }
 
-    // Set the values inside of the matrices
+    // Set the values inside the matrices
     void setMatrices(const double leftMatrix[Configuration::NUM_ROWS][Configuration::NUM_COLS],
                      const double rightMatrix[Configuration::NUM_ROWS][Configuration::NUM_COLS]) {
-
         for (int row = 0; row < Configuration::NUM_ROWS; row++) {
             for (int col = 0; col < Configuration::NUM_COLS; col++) {
                 this->leftMatrix[row][col] = leftMatrix[row][col];
@@ -62,11 +53,7 @@ public:
     }
 
     void matrixAdd() {
-        // Critical section start, lock is automatically enabled
-        unique_lock<mutex> lock(shared_mutex);
-
         startTime = clock();
-
         int sum = 0;
         for (int row = 0; row < Configuration::NUM_ROWS; row++) {
             for (int col = 0; col < Configuration::NUM_COLS; col++) {
@@ -75,13 +62,8 @@ public:
                 sum += value;
             }
         }
-
         endTime = clock();
-
-        // Critical section end, unlock the thread
-        lock.unlock();
     } // end matrixAdd
-
     double getElapsedTime() const { return double(endTime - startTime) / CLOCKS_PER_SEC; }
     double getStartTime() const { return startTime; }
 
@@ -100,7 +82,6 @@ public:
 
 
 int main() {
-
     // Basic positive integers
     double leftMatrixTestOne[Configuration::NUM_ROWS][Configuration::NUM_COLS] = {
         {4, 5, 7},
@@ -153,19 +134,20 @@ int main() {
         {6, 9, 7}
     };
 
-    MatrixCalculator matrixCalculatorTestOne;
+    MatrixCalculator matrixCalculatorTestOne,
+            matrixCalculatorTestTwo,
+            matrixCalculatorTestThree,
+            matrixCalculatorTestFour;
+
     matrixCalculatorTestOne.setMatrices(leftMatrixTestOne, rightMatrixTestOne);
     matrixCalculatorTestOne.matrixAdd();
 
-    MatrixCalculator matrixCalculatorTestTwo;
     matrixCalculatorTestTwo.setMatrices(leftMatrixTestTwo, rightMatrixTestTwo);
     matrixCalculatorTestTwo.matrixAdd();
 
-    MatrixCalculator matrixCalculatorTestThree;
     matrixCalculatorTestThree.setMatrices(leftMatrixTestThree, rightMatrixTestThree);
     matrixCalculatorTestThree.matrixAdd();
 
-    MatrixCalculator matrixCalculatorTestFour;
     matrixCalculatorTestFour.setMatrices(leftMatrixTestFour, rightMatrixTestFour);
     matrixCalculatorTestFour.matrixAdd();
 
@@ -173,25 +155,23 @@ int main() {
     // =================================================
     //              Starting Threaded Testing
     // =================================================
+    MatrixCalculator matrixCalculatorThreadTestOne,
+            matrixCalculatorThreadTestTwo,
+            matrixCalculatorThreadTestThree,
+            matrixCalculatorThreadTestFour;
 
-    MatrixCalculator matrixCalculatorThreadTestOne;
     matrixCalculatorThreadTestOne.setMatrices(leftMatrixTestOne, rightMatrixTestOne);
-
-    MatrixCalculator matrixCalculatorThreadTestTwo;
     matrixCalculatorThreadTestTwo.setMatrices(leftMatrixTestTwo, rightMatrixTestTwo);
-
-    MatrixCalculator matrixCalculatorThreadTestThree;
     matrixCalculatorThreadTestThree.setMatrices(leftMatrixTestThree, rightMatrixTestThree);
-
-    MatrixCalculator matrixCalculatorThreadTestFour;
     matrixCalculatorThreadTestFour.setMatrices(leftMatrixTestFour, rightMatrixTestFour);
 
-    std::future<void> future = async(launch::async, &MatrixCalculator::matrixAdd, &matrixCalculatorThreadTestOne);
+    std::future<void> future1 = async(launch::async, &MatrixCalculator::matrixAdd, &matrixCalculatorThreadTestOne);
     std::future<void> future2 = async(launch::async, &MatrixCalculator::matrixAdd, &matrixCalculatorThreadTestTwo);
     std::future<void> future3 = async(launch::async, &MatrixCalculator::matrixAdd, &matrixCalculatorThreadTestThree);
     std::future<void> future4 = async(launch::async, &MatrixCalculator::matrixAdd, &matrixCalculatorThreadTestFour);
 
-    future.get();
+
+    future1.get();
     future2.get();
     future3.get();
     future4.get();
@@ -201,20 +181,45 @@ int main() {
     cout << "========== Single thread Test Results ============" << endl;
     cout << "==================================================" << endl;
     matrixCalculatorTestOne.printMatrixResult();
-    cout << "The time elapsed is: " << fixed << setprecision(6) << matrixCalculatorTestOne.getElapsedTime() << " seconds" << endl;
+
+    cout    << "The time elapsed is: "
+            << fixed
+            << setprecision(6)
+            << matrixCalculatorTestOne.getElapsedTime()
+            << " seconds"
+            << endl;
 
     matrixCalculatorTestTwo.printMatrixResult();
-    cout << "The time elapsed is: " << fixed << setprecision(6) << matrixCalculatorTestTwo.getElapsedTime() << " seconds" << endl;
+    cout    << "The time elapsed is: "
+            << fixed
+            << setprecision(6)
+            << matrixCalculatorTestTwo.getElapsedTime()
+            << " seconds"
+            << endl;
 
     matrixCalculatorTestThree.printMatrixResult();
-    cout << "The time elapsed is: " << fixed << setprecision(6) << matrixCalculatorTestThree.getElapsedTime() << " seconds" << endl;
+    cout    << "The time elapsed is: "
+            << fixed
+            << setprecision(6)
+            << matrixCalculatorTestThree.getElapsedTime()
+            << " seconds"
+            << endl;
 
     matrixCalculatorTestFour.printMatrixResult();
-    cout << "The time elapsed is: " << fixed << setprecision(6) << matrixCalculatorTestFour.getElapsedTime() << " seconds" << endl;
+    cout    << "The time elapsed is: "
+            << fixed
+            << setprecision(6)
+            << matrixCalculatorTestFour.getElapsedTime()
+            << " seconds"
+            << endl;
 
     cout << "==================================================" << endl;
 
-    double totalTime = matrixCalculatorTestOne.getElapsedTime() + matrixCalculatorTestTwo.getElapsedTime() + matrixCalculatorTestThree.getElapsedTime() + matrixCalculatorTestFour.getElapsedTime();
+    double totalTime = matrixCalculatorTestOne.getElapsedTime() +
+                       matrixCalculatorTestTwo.getElapsedTime() +
+                       matrixCalculatorTestThree.getElapsedTime() +
+                       matrixCalculatorTestFour.getElapsedTime();
+
     cout << "Single Threaded Total Time Spent processing: " << totalTime << endl;
 
     cout << "==================================================" << endl;
@@ -222,18 +227,42 @@ int main() {
     cout << "==================================================" << endl;
 
     matrixCalculatorThreadTestOne.printMatrixResult();
-    cout << "The time elapsed is: " << fixed << setprecision(6) << matrixCalculatorThreadTestOne.getElapsedTime() << " seconds" << endl;
+    cout << "The time elapsed is: "
+            << fixed
+            << setprecision(6)
+            << matrixCalculatorThreadTestOne.getElapsedTime()
+            << " seconds"
+            << endl;
 
     matrixCalculatorThreadTestTwo.printMatrixResult();
-    cout << "The time elapsed is: " << fixed << setprecision(6) << matrixCalculatorThreadTestTwo.getElapsedTime() << " seconds" << endl;
+    cout    << "The time elapsed is: "
+            << fixed
+            << setprecision(6)
+            << matrixCalculatorThreadTestTwo.getElapsedTime()
+            <<
+            " seconds"
+            << endl;
 
     matrixCalculatorThreadTestThree.printMatrixResult();
-    cout << "The time elapsed is: " << fixed << setprecision(6) << matrixCalculatorThreadTestThree.getElapsedTime() << " seconds" << endl;
+    cout    << "The time elapsed is: "
+            << fixed
+            << setprecision(6)
+            << matrixCalculatorThreadTestThree.getElapsedTime()
+            << " seconds"
+            << endl;
 
     matrixCalculatorThreadTestFour.printMatrixResult();
-    cout << "The time elapsed is: " << fixed << setprecision(6) << matrixCalculatorThreadTestFour.getElapsedTime() << " seconds" << endl;
+    cout    << "The time elapsed is: "
+            << fixed
+            << setprecision(6)
+            << matrixCalculatorThreadTestFour.getElapsedTime()
+            << " seconds"
+            << endl;
 
-    totalTime = matrixCalculatorThreadTestOne.getElapsedTime() + matrixCalculatorThreadTestTwo.getElapsedTime() + matrixCalculatorThreadTestThree.getElapsedTime() + matrixCalculatorThreadTestFour.getElapsedTime();
+    totalTime = matrixCalculatorThreadTestOne.getElapsedTime() +
+                matrixCalculatorThreadTestTwo.getElapsedTime() +
+                matrixCalculatorThreadTestThree.getElapsedTime() +
+                matrixCalculatorThreadTestFour.getElapsedTime();
 
     cout << "==================================================" << endl;
     cout << "Multi - Threaded Total Time Spent processing: " << totalTime << endl;
